@@ -41,7 +41,7 @@ defmodule Lyex.Wsdl do
 
   defdelegate parse(xml), to: Lyex.Wsdl.Parser
   defdelegate assemble(wsdl), to: Lyex.Wsdl.Assembler
-  defdelegate compile(wsdl), to: Lyex.Wsdl.Compiler
+  defdelegate compile(wsdl, http_options), to: Lyex.Wsdl.Compiler
 
   def merge(%Wsdl{} = a, %Wsdl{} = b) do
     %{

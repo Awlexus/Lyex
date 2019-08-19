@@ -5,7 +5,7 @@ defmodule Lyex do
 
   @default_cache_dir Application.app_dir(:lyex, "priv")
 
-  defstruct service_name: nil, wsdl: nil, cache_dir: @default_cache_dir
+  defstruct service_name: nil, wsdl: nil, cache_dir: @default_cache_dir, http_options: []
 
   alias Lyex.Wsdl
   alias Lyex.SourceFile
@@ -19,7 +19,7 @@ defmodule Lyex do
     |> SourceFile.resolve_file()
     |> Wsdl.parse()
     |> Wsdl.assemble()
-    |> Wsdl.compile()
+    |> Wsdl.compile(spec.http_options)
   end
 
   def init(_), do: usage()

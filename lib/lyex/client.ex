@@ -3,7 +3,8 @@ defmodule Lyex.Client do
     Lyex.init(%Lyex{
       service_name: Keyword.get(opts, :service_name),
       wsdl: Keyword.get(opts, :wsdl),
-      cache_dir: Keyword.get(opts, :cache_dir, "./priv")
+      cache_dir: Keyword.get(opts, :cache_dir, "./priv"),
+      http_options: Keyword.get(opts, :http_options, [])
     })
   end
 end
