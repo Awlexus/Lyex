@@ -8,7 +8,7 @@ defmodule Lyex.Wsdl do
             schemas: [],
             port_types: [],
             bindings: [],
-            service: %Wsdl.Service{},
+            services: [],
             messages: []
 
   defimpl String.Chars do
@@ -31,7 +31,7 @@ defmodule Lyex.Wsdl do
       end
 
       "files\n\t\t\t#{Enum.join(wsdl.files_read, "\n\t\t\t")}"
-      |> add.("service", wsdl.service)
+      |> add.("services", wsdl.services)
       |> add.("messages", wsdl.messages)
       |> add.("port_types", wsdl.port_types)
       |> add.("bindings", wsdl.bindings)
@@ -41,14 +41,14 @@ defmodule Lyex.Wsdl do
 
   defdelegate parse(xml), to: Lyex.Wsdl.Parser
   defdelegate assemble(wsdl), to: Lyex.Wsdl.Assembler
-  defdelegate compile(wsdl, http_options), to: Lyex.Wsdl.Compiler
+  defdelegate compile(wsdl, context, prefix, http_options), to: Lyex.Wsdl.Compiler
 
   def merge(%Wsdl{} = a, %Wsdl{} = b) do
     %{
       a
       | target_namespace: choose_target_namespace(a, b),
         files_read: b.files_read ++ a.files_read,
-        service: b.service |> Map.merge(a.service),
+        services: a.services ++ b.services,
         schemas: b.schemas ++ a.schemas,
         bindings: b.bindings ++ a.bindings,
         messages: b.messages ++ a.messages,

@@ -18,7 +18,8 @@ defmodule Lyex.Wsdl.Parser do
     wsdl = Enum.reduce(imports, wsdl, fn imported, acc -> acc |> Wsdl.merge(imported) end)
 
     Logger.debug(wsdl)
-    %{wsdl | service: %{wsdl.service | name: spec.service_name}}
+
+    wsdl
   end
 
   defp read(xml, state) do

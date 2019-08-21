@@ -2,10 +2,29 @@ defmodule Lyex.Wsdl.Compiler do
   alias Lyex.Wsdl
   alias Lyex.Wsdl.Compiler.Structures
 
-  def compile(%{service_name: service_name, port: port, port_type: port_type}, http_options) do
-    Enum.reduce(port_type.operations, [], fn operation, acc ->
-      [generate_operation(operation, service_name, port.address, http_options) | acc]
-    end)
+  def compile(assembled, context, prefix, http_options) when is_list(assembled) do
+    Enum.map(assembled, &compile(&1, context, prefix, http_options))
+  end
+
+  def compile(
+        %{service_name: service_name, port: port, port_type: port_type},
+        context,
+        prefix,
+        http_options
+      ) do
+    name = :"#{context}.#{Macro.camelize(service_name)}"
+    service_name = "#{prefix}.#{service_name}"
+
+    functions =
+      Enum.reduce(port_type.operations, [], fn operation, acc ->
+        [generate_operation(operation, service_name, port.address, http_options) | acc]
+      end)
+
+    quote do
+      defmodule unquote(name) do
+        unquote(functions)
+      end
+    end
   end
 
   defp generate_operation(
@@ -27,7 +46,7 @@ defmodule Lyex.Wsdl.Compiler do
 
     Structures.generate_structure(service_name, operation_name <> "Input", input)
     Structures.generate_structure(service_name, operation_name <> "Output", output)
-    output_struct = service_name |> Module.concat(operation_name <> "Output")
+    output_struct = service_name |> Module.concat(Macro.camelize(operation_name) <> "Output")
 
     function_name =
       to_string(operation_name)
@@ -40,18 +59,11 @@ defmodule Lyex.Wsdl.Compiler do
       def unquote(function_name)(unquote(input_type)) do
         import Lyex.Wsdl.Output, only: [read: 3]
 
-        input =
-          Keyword.get(binding(), :input)
-          |> IO.inspect(label: "input")
+        input = Keyword.get(binding(), :input)
 
         address = unquote(address)
         headers = unquote(request_headers)
-
-        envelope =
-          EEx.eval_string(unquote(request_template),
-            assigns: [input: input]
-          )
-          |> IO.inspect(label: "envelope")
+        envelope = EEx.eval_string(unquote(request_template), assigns: [input: input])
 
         with {:ok, %{body: body}} <-
                HTTPoison.post(address, envelope, headers, unquote(http_options))
@@ -72,7 +84,8 @@ defmodule Lyex.Wsdl.Compiler do
      [
        {:%, [],
         [
-          {:__aliases__, [alias: false], [service_name, String.to_atom(input_name)]},
+          {:__aliases__, [alias: false],
+           [service_name, String.to_atom(Macro.camelize(input_name))]},
           {:%{}, [], []}
         ]},
        Macro.var(:input, nil)

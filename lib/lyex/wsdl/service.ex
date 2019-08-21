@@ -7,7 +7,13 @@ defmodule Lyex.Wsdl.Service do
 
   defimpl String.Chars do
     def to_string(%{name: name, ports: ports}) do
-      ps = Enum.map(ports, fn {k, _} -> k end) |> Enum.join(", ")
+      ps =
+        Enum.map(ports, fn
+          {k, _} -> k
+          %{name: name} -> name
+        end)
+        |> Enum.join(", ")
+
       ~s(#{name} ports: #{ps})
     end
   end
@@ -45,7 +51,7 @@ defmodule Lyex.Wsdl.Service do
 
   def exit(endElement(name: 'service'), state) do
     %{stack: [service, wsdl | rest]} = state
-    wsdl = %{wsdl | service: service}
+    wsdl = %{wsdl | services: wsdl.services ++ [service]}
 
     %{state | stack: [wsdl | rest]}
     |> exit_context()

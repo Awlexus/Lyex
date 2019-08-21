@@ -5,7 +5,11 @@ defmodule Lyex do
 
   @default_cache_dir Application.app_dir(:lyex, "priv")
 
-  defstruct service_name: nil, wsdl: nil, cache_dir: @default_cache_dir, http_options: []
+  defstruct service_name: nil,
+            wsdl: nil,
+            cache_dir: @default_cache_dir,
+            http_options: [],
+            context: nil
 
   alias Lyex.Wsdl
   alias Lyex.SourceFile
@@ -13,13 +17,14 @@ defmodule Lyex do
   def init(%Lyex{wsdl: nil}), do: raise(%Lyex.Error{message: "wsdl must be set."})
   def init(%Lyex{cache_dir: nil}), do: raise(%Lyex.Error{message: "cache_dir must be set."})
   def init(%Lyex{service_name: nil}), do: raise(%Lyex.Error{message: "service_name must be set."})
+  def init(%Lyex{context: nil}), do: raise(%Lyex.Error{message: "context must be set."})
 
   def init(%Lyex{} = spec) do
     spec
     |> SourceFile.resolve_file()
     |> Wsdl.parse()
     |> Wsdl.assemble()
-    |> Wsdl.compile(spec.http_options)
+    |> Wsdl.compile(spec.context, spec.service_name, spec.http_options)
   end
 
   def init(_), do: usage()

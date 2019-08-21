@@ -10,7 +10,7 @@ defmodule Lyex.Wsdl.Compiler.Structures do
         use Accessible
       end
 
-    name = service_name |> Module.concat(name)
+    name = service_name |> Module.concat(Macro.camelize(name))
     Module.create(name, module, Macro.Env.location(__ENV__))
   end
 

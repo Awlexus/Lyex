@@ -5,19 +5,22 @@ defmodule Lyex.Wsdl.Assembler do
 
   def assemble(%Wsdl{} = wsdl) do
     # File.write!("service.ex", inspect(wsdl, pretty: true, limit: :infinity))
-    %{schemas: schemas, service: service} = wsdl
+    %{schemas: schemas, services: services} = wsdl
+    # IO.inspect(wsdl.bindings, label: :wsdl)
 
-    port = validate_ports(service)
-    schema = Enum.reduce(schemas, %Wsdl.Schema{}, &Wsdl.Schema.merge/2)
+    Enum.map(services, fn service ->
+      port = validate_ports(service)
+      schema = Enum.reduce(schemas, %Wsdl.Schema{}, &Wsdl.Schema.merge/2)
 
-    port_type =
-      port
-      |> Resolver.resolve_binding(wsdl)
-      |> Resolver.resolve_port_type(wsdl, schema)
+      port_type =
+        port
+        |> Resolver.resolve_binding(wsdl)
+        |> Resolver.resolve_port_type(wsdl, schema)
 
-    # File.write!("assembled.ex", inspect(port_type, pretty: true, limit: :infinity))
+      # File.write!("assembled.ex", inspect(port_type, pretty: true, limit: :infinity))
 
-    %{service_name: service.name, port: port, port_type: port_type}
+      %{service_name: service.name, port: port, port_type: port_type}
+    end)
   end
 
   defp validate_ports(%Wsdl.Service{ports: ports}) when length(ports) == 0 do
