@@ -2,13 +2,17 @@ defmodule Lyex.Wsdl.Assembler.Soap.Document do
   alias Lyex.Wsdl
   alias Lyex.Wsdl.Schema
 
-  def generate_request_template(%Wsdl.PortType.Operation{name: operation_name}, input, %Wsdl{
-        target_namespace: ns
-      }) do
+  def generate_request_template(
+        %Wsdl.PortType.Operation{input: %{name: input_name}},
+        input,
+        %Wsdl{
+          target_namespace: ns
+        }
+      ) do
     %{xml: body} =
       generate_parameters(input.type, %{
         xml: "",
-        path: []
+        path: [Macro.underscore(input_name)]
       })
 
     # %{xml: headers} = generate_parameters(arg1, arg2)
@@ -16,9 +20,9 @@ defmodule Lyex.Wsdl.Assembler.Soap.Document do
     ~s(<soap:Envelope xmlns:soap='http://schemas.xmlsoap.org/soap/envelope/'>
         <soap:Header/>
         <soap:Body>
-          <lyex:#{operation_name} xmlns:lyex='#{ns}'>
+          <lyex:#{input_name} xmlns:lyex='#{ns}'>
             #{body}
-          </lyex:#{operation_name}>
+          </lyex:#{input_name}>
         </soap:Body>
       </soap:Envelope>)
     |> String.replace("\n", "")
